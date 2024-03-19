@@ -36,7 +36,7 @@ class Bird:
 
     def jump(self):
         self.speed = -10.5
-        self.tempo = 0
+        self.time = 0
         self.high = self.y
 
     def move(self):
@@ -46,7 +46,7 @@ class Bird:
 
         #restrict displacement 
         if displacement > 16: 
-            displacement = 16
+            displacement = 16  
         elif displacement < 0:
             displacement -= 2
 
@@ -58,7 +58,7 @@ class Bird:
                 self.angle = self.max_rotation
         else:
             if self.angle > -90:
-                 self.angle -= self.speed_rotation
+                self.angle -= self.speed_rotation
 
     def draw(self, screen):
         #which image to use
@@ -77,7 +77,7 @@ class Bird:
             self.count_image = 0
 
         #if the bird is falling dont flap its wing
-        if self.angle <= 80:
+        if self.angle <= -80:
             self.image = self.images[1]
             self.count_image = self.animation_time * 2
 
@@ -88,7 +88,7 @@ class Bird:
         screen.blit(rotated_image, rectangle.topleft)
 
     def get_mask(self):
-        pygame.mask.from_surface(self.image)
+        return pygame.mask.from_surface(self.image)
 
 
 class Pipe:
@@ -139,5 +139,98 @@ class Base:
     base_width = base_image.get_width()
     image = base_image
 
-    def __init__(self):
-        pass
+    def __init__(self, y):
+        self.y = y
+        self.x1 = 0
+        self.x2 = self.base_width
+
+    def move(self):
+        self.x1 -= self.speed
+        self.x2 -= self.speed
+
+        if self.x1 + self.base_width < 0:
+            self.x1 = self.x2 + self.base_width
+
+        if self.x2 + self.base_width < 0:
+            self.x2 = self.x1 + self.base_width
+
+    def draw(self,screen):
+        screen.blit(self.image, (self.x1, self.y))
+        screen.blit(self.image, (self.x2, self.y))
+
+
+def draw_screen(screen, birds, pipes, base, score):
+    screen.blit(background_image, (0, 0))
+
+    for bird in birds:
+        bird.draw(screen)
+    
+    for pipe in pipes:
+        pipe.draw(screen)
+
+    text = game_font.render(f'Score: {score}', 1, (255, 255, 255))
+    screen.blit(text, (screen_width - 10 - text.get_width(), 10))
+    
+    base.draw(screen)
+
+    pygame.display.update()
+
+def main():
+    birds = [Bird(230, 350)]
+    base = Base(730)
+    pipes = [Pipe(700)]
+    screen = pygame.display.set_mode((screen_width, screen_high))
+    score = 0
+    clock = pygame.time.Clock()
+
+    running = True
+    while running:
+        clock.tick(30)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    for bird in birds:
+                        bird.jump()
+
+        for bird in birds:
+            bird.move()
+
+        base.move()
+
+        add_pipe = False
+        remove_pipes = []
+        for pipe in pipes:
+            for i, bird in enumerate(birds):
+                if pipe.collide(bird):
+                    birds.pop(i)
+                if not pipe.passed and bird.x > pipe.x:
+                    pipe.passed = True
+                    add_pipe = True
+            
+            pipe.move()
+            if pipe.x + pipe.top_pipe.get_width() < 0:
+                remove_pipes.append(pipe)
+
+        if add_pipe:
+            score += 1
+            pipes.append(Pipe(600))
+
+        for pipe in remove_pipes:
+            pipes.remove(pipe)
+
+        for i, bird in enumerate(birds):
+            if (bird.y + bird.image.get_height()) > base.y or bird.y < 0:
+                birds.pop(i)
+
+    
+        draw_screen(screen, birds, pipes, base, score)
+    
+#se este for o arquivo que você está rodando rode isso:
+#caso este arquivo está sendo inportado não rode isso:
+if __name__ == '__main__':
+    main()
