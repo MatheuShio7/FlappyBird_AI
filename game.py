@@ -1,6 +1,10 @@
 import pygame
-import os
+import os 
 import random
+import neat
+
+ai_playing = True
+generation = 0
 
 screen_width = 500
 screen_high = 800
@@ -170,13 +174,27 @@ def draw_screen(screen, birds, pipes, base, score):
 
     text = game_font.render(f'Score: {score}', 1, (255, 255, 255))
     screen.blit(text, (screen_width - 10 - text.get_width(), 10))
+
+    if ai_playing:
+        text = game_font.render(f'Gen: {generation}', 1, (255, 255, 255))
+        screen.blit(text, (10, 10))
     
     base.draw(screen)
 
     pygame.display.update()
 
+
 def main():
-    birds = [Bird(230, 350)]
+    global generation
+    generation += 1
+
+    if ai_playing:
+        neats = []
+        genome_list = []
+        birds = []
+    else:
+        birds = [Bird(230, 350)]
+
     base = Base(730)
     pipes = [Pipe(700)]
     screen = pygame.display.set_mode((screen_width, screen_high))
