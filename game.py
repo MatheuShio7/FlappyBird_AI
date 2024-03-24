@@ -184,14 +184,25 @@ def draw_screen(screen, birds, pipes, base, score):
     pygame.display.update()
 
 
-def main():
+#fitness function 
+def main(genomes, config):
     global generation
     generation += 1
 
     if ai_playing:
-        neats = []
+        redes = []
         genome_list = []
         birds = []
+        for _, genome in genomes:
+            #criando a rede neural
+            rede = neat.nn.FeedForwardNetwork.create(genome, config) 
+            redes.append(rede)
+
+            genome.fitness = 0 #pontuação da rede neural
+            genome_list.append(genome)
+
+            #criando cada pássaro
+            birds.append(Bird(230, 350))
     else:
         birds = [Bird(230, 350)]
 
@@ -210,13 +221,23 @@ def main():
                 running = False
                 pygame.quit()
                 quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    for bird in birds:
-                        bird.jump()
+            if not ai_playing:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        for bird in birds:
+                            bird.jump()
 
-        for bird in birds:
+        pipe_index = 0
+        if len(birds) > 0:
+            if len(pipes) > 1 and birds[0].x > (pipes[0].x + pipes[0].top_pipe.get_width()):
+                pipe_index = 1
+        else:
+            running = False
+            break
+
+        for i, bird in enumerate(birds):
             bird.move()
+            genome_list[i]
 
         base.move()
 
