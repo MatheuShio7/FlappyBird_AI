@@ -237,7 +237,13 @@ def main(genomes, config):
 
         for i, bird in enumerate(birds):
             bird.move()
-            genome_list[i]
+            #pequeno aumento na fitness desse genoma
+            genome_list[i].fitness += 0.1
+            output = redes[i].activate((bird.y, 
+                                        abs(bird.y - pipes[pipe_index].high), 
+                                        abs(bird.y - pipes[pipe_index].position_base_pipe)))
+            if output[0] > 0.5:
+                bird.jump()
 
         base.move()
 
@@ -247,6 +253,10 @@ def main(genomes, config):
             for i, bird in enumerate(birds):
                 if pipe.collide(bird):
                     birds.pop(i)
+                    if ai_playing:
+                        genome_list[i].fitness -= 1
+                        genome_list.pop(i)
+                        redes.pop(i)
                 if not pipe.passed and bird.x > pipe.x:
                     pipe.passed = True
                     add_pipe = True
@@ -258,6 +268,8 @@ def main(genomes, config):
         if add_pipe:
             score += 1
             pipes.append(Pipe(600))
+            for genome in genome_list:
+                genome.fitness += 5
 
         for pipe in remove_pipes:
             pipes.remove(pipe)
@@ -265,11 +277,34 @@ def main(genomes, config):
         for i, bird in enumerate(birds):
             if (bird.y + bird.image.get_height()) > base.y or bird.y < 0:
                 birds.pop(i)
+                if ai_playing:
+                    genome_list.pop(i)
+                    redes.pop(i)
 
     
         draw_screen(screen, birds, pipes, base, score)
-    
+
+
+def run(config_path):
+    config = neat.config.Config(neat.DefaultGenome, 
+                                neat.DefaultReproduction, 
+                                neat.DefaultSpeciesSet, 
+                                neat.DefaultStagnation, 
+                                config_path)
+
+    population = neat.Population(config)
+    population.add_reporter(neat.StdOutReporter(True))
+    population.add_reporter(neat.StatisticsReporter())
+
+    if ai_playing:
+        population.run(main, 50)    
+    else:
+        main(None, None)
+
+
 #se este for o arquivo que você está rodando rode isso:
 #caso este arquivo está sendo inportado não rode isso:
 if __name__ == '__main__':
-    main()
+    path = os.path.dirname(__file__)
+    config_path = os.path.join(path, 'config.txt')
+    run(config_path)
