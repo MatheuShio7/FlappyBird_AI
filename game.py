@@ -237,13 +237,14 @@ def main(genomes, config):
 
         for i, bird in enumerate(birds):
             bird.move()
-            #pequeno aumento na fitness desse genoma
-            genome_list[i].fitness += 0.1
-            output = redes[i].activate((bird.y, 
-                                        abs(bird.y - pipes[pipe_index].high), 
-                                        abs(bird.y - pipes[pipe_index].position_base_pipe)))
-            if output[0] > 0.5:
-                bird.jump()
+            if ai_playing:
+                #pequeno aumento na fitness desse genoma
+                genome_list[i].fitness += 0.1
+                output = redes[i].activate((bird.y, 
+                                            abs(bird.y - pipes[pipe_index].high), 
+                                            abs(bird.y - pipes[pipe_index].position_base_pipe)))
+                if output[0] > 0.5:  
+                    bird.jump()
 
         base.move()
 
@@ -268,8 +269,9 @@ def main(genomes, config):
         if add_pipe:
             score += 1
             pipes.append(Pipe(600))
-            for genome in genome_list:
-                genome.fitness += 5
+            if ai_playing:
+                for genome in genome_list:
+                    genome.fitness += 5
 
         for pipe in remove_pipes:
             pipes.remove(pipe)
